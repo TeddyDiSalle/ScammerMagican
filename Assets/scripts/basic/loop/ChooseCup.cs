@@ -5,11 +5,13 @@ using UnityEngine;
 public class ChooseCup : MonoBehaviour
 {
     public float revealDelay;
+    private lvlProgress progress;
     private LowerCup cupRaiser;
     // Start is called before the first frame update
     void Start()
     {
         cupRaiser = FindObjectOfType<LowerCup>();
+        progress = FindObjectOfType<lvlProgress>();
     }
 
     // Update is called once per frame
@@ -26,7 +28,7 @@ public class ChooseCup : MonoBehaviour
     IEnumerator DoReveal()
     {
         bool won = false;
-        Debug.Log("Sprite clicked!"+gameObject);
+        //Debug.Log("Sprite clicked!"+gameObject);
 
         if (transform.childCount>0&&//has a child
         transform.GetChild(0).gameObject.name=="ball"){//its the ball!
@@ -37,7 +39,11 @@ public class ChooseCup : MonoBehaviour
         cupRaiser.lowerCup(transform,true);
 
         yield return new WaitForSeconds(cupRaiser.duration+revealDelay);
+        yield return StartCoroutine(cupRaiser.DoLower(true,transform));
 
-        StartCoroutine(cupRaiser.DoLower(true,transform));
+        if (won)
+            progress.won();
+        else
+            progress.lost();
     }
 }

@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class setCups : MonoBehaviour
 {
@@ -34,6 +33,8 @@ public class setCups : MonoBehaviour
         float cupDistance = totalWidth/cupsAmt;
         float cupWidth = totalWidth/(cupsAmt + (cupsAmt-1)*spacingAspectRatio);
 
+        int middle = Mathf.FloorToInt((float)cupsAmt/2f);
+
         for (int i = 0; i < cupsAmt; i++){
             GameObject cup = Instantiate(cupPrefab);
             cups.Add(cup.transform);
@@ -41,7 +42,7 @@ public class setCups : MonoBehaviour
             cup.transform.position = new Vector2(-border+cupDistance/2f+cupDistance*i,setY);
             cup.name = "cup"+i.ToString();
 
-            if (i==0)//first one
+            if (i==middle)//first one
                 ball.transform.position = new Vector2(cup.transform.position.x,ball.transform.position.y);
         }
 

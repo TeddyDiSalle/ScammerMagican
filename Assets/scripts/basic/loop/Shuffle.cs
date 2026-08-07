@@ -7,6 +7,7 @@ public class Shuffle : MonoBehaviour
     public int shufflesAmt;
     private int trackShufflesAmt;
     public float duration;
+    public specMoveManager specialMoves;
     // Start is called before the first frame update
     void Start()
     {
@@ -21,9 +22,12 @@ public class Shuffle : MonoBehaviour
 
     public IEnumerator WaitForShuffles(Transform [] cups)
     {
-        Debug.Log(trackShufflesAmt);
-        yield return new WaitForSeconds(duration*1.2f);//a little longer than shuffle time
+        //Debug.Log(trackShufflesAmt);
         doShuffle(cups);
+        yield return new WaitForSeconds(duration*1.2f);//a little longer than shuffle time
+
+        float specialDuration = specialMoves.shuffleOver();//eventually make this return a float for how long to wait vvvv
+        yield return new WaitForSeconds(specialDuration);
 
         trackShufflesAmt --;//used a shuffle amount
         if (trackShufflesAmt>0)//still more shuffles to do

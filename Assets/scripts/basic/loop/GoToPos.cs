@@ -8,7 +8,7 @@ public static class GoToPos
         runner.StartCoroutine(MoveCoroutine(target, endPos, duration));
     }
 
-    private static IEnumerator MoveCoroutine(Transform target, Vector3 endPos, float duration)
+    public static IEnumerator MoveCoroutine(Transform target, Vector3 endPos, float duration)
     {
         Vector3 startPos = target.position;
         float elapsed = 0f;
@@ -17,7 +17,8 @@ public static class GoToPos
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            target.position = Vector3.Lerp(startPos, endPos, t);
+            if (target!=null)
+                target.position = Vector3.Lerp(startPos, endPos, t);
             yield return null;
         }
 
