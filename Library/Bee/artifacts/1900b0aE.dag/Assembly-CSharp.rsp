@@ -381,6 +381,7 @@
 "Assets/scripts/basic/loop/lvlProgress.cs"
 "Assets/scripts/basic/loop/ParentBall.cs"
 "Assets/scripts/basic/loop/Shuffle.cs"
+"Assets/scripts/basic/setUp/cupOverlap.cs"
 "Assets/scripts/basic/setUp/fadeUp.cs"
 "Assets/scripts/basic/setUp/gameOrder.cs"
 "Assets/scripts/basic/setUp/setCups.cs"

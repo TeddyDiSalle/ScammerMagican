@@ -350,7 +350,7 @@ Transform:
   m_GameObject: {fileID: 213763707}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalPosition: {x: 0, y: 3.25, z: 0}
   m_LocalScale: {x: 0.5, y: 6, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -954,7 +954,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d3873dda8c6114d4bbb30afa5d906071, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  shufflesAmt: 3
+  shufflesAmt: 1
   duration: 0.6
   specialMoves: {fileID: 795278694}
   clickBlocker: {fileID: 1275323297}
@@ -988,7 +988,7 @@ MonoBehaviour:
   cupSetter: {fileID: 1568774868}
   cupsAtLevels: 03000000050000000600000007000000
   level: 0
-  winsToProgress: 2
+  winsToProgress: 1
   lossText: You lost, placeholder text etc. Press anything to continue
   wonText: You won! Press any button to continue
 --- !u!1 &1892743498
@@ -1168,7 +1168,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: -1
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
