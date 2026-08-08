@@ -15,6 +15,7 @@ public class specMoveManager : MonoBehaviour
     public LowerCup lowerCup;
     public rollToOther roller;
     public fakeBall faker;
+    public teleport teleporter;
     public lvlProgress progression;
     // Start is called before the first frame update
     void Start()
@@ -43,6 +44,8 @@ public class specMoveManager : MonoBehaviour
                     return roller.doRoll(lowerCup.cups);
                 else if (move.name=="fake")
                     return faker.makeBall();
+                else if (move.name=="teleport")
+                    return teleporter.doTP(lowerCup.cups);
                 
 
                 //return;//do no other moves (for now)

@@ -8,6 +8,7 @@ public class Shuffle : MonoBehaviour
     private int trackShufflesAmt;
     public float duration;
     public specMoveManager specialMoves;
+    public GameObject clickBlocker;
     // Start is called before the first frame update
     void Start()
     {
@@ -37,6 +38,8 @@ public class Shuffle : MonoBehaviour
         trackShufflesAmt --;//used a shuffle amount
         if (trackShufflesAmt>0)//still more shuffles to do
             StartCoroutine(WaitForShuffles(cups));//run it bacl
+        else
+            clickBlocker.SetActive(false);//allow player to click
     }
 
     public void doShuffle(Transform[] cups)

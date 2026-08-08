@@ -387,6 +387,7 @@
 "Assets/scripts/specialMoves/fakeBall.cs"
 "Assets/scripts/specialMoves/rollToOther.cs"
 "Assets/scripts/specialMoves/specMoveManager.cs"
+"Assets/scripts/specialMoves/teleport.cs"
 -langversion:9.0
 /deterministic
 /optimize+

@@ -5,6 +5,7 @@ using UnityEngine;
 public class ChooseCup : MonoBehaviour
 {
     public float revealDelay;
+    public GameObject clickBlocker;
     private lvlProgress progress;
     private LowerCup cupRaiser;
     // Start is called before the first frame update
@@ -12,6 +13,7 @@ public class ChooseCup : MonoBehaviour
     {
         cupRaiser = FindObjectOfType<LowerCup>();
         progress = FindObjectOfType<lvlProgress>();
+        clickBlocker = GameObject.Find("clickBlocker");
     }
 
     // Update is called once per frame
@@ -22,11 +24,13 @@ public class ChooseCup : MonoBehaviour
 
     void OnMouseDown()
     {
-        StartCoroutine(DoReveal());
+        if (!clickBlocker.activeSelf)
+            StartCoroutine(DoReveal());
     }
 
     IEnumerator DoReveal()
     {
+        clickBlocker.SetActive(true);//make sure player cant click
         bool won = false;
         //Debug.Log("Sprite clicked!"+gameObject);
 
