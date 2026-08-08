@@ -39,6 +39,8 @@ public class ChooseCup : MonoBehaviour
         cupRaiser.lowerCup(transform,true);
 
         yield return new WaitForSeconds(cupRaiser.duration+revealDelay);
+        progress.initialDone();
+
         yield return StartCoroutine(cupRaiser.DoLower(true,transform));
 
         if (won)

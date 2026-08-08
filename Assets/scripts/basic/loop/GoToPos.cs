@@ -22,6 +22,7 @@ public static class GoToPos
             yield return null;
         }
 
-        target.position = endPos;
+        if (target!=null)
+            target.position = endPos;
     }
 }

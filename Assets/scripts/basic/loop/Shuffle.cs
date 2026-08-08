@@ -11,6 +11,11 @@ public class Shuffle : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        resetShuffleTracker();
+    }
+
+    public void resetShuffleTracker()
+    {
         trackShufflesAmt = shufflesAmt;
     }
 
@@ -34,23 +39,39 @@ public class Shuffle : MonoBehaviour
             StartCoroutine(WaitForShuffles(cups));//run it bacl
     }
 
-    public void doShuffle(Transform [] cups)
+    public void doShuffle(Transform[] cups)
     {
         Vector3[] positions = new Vector3[cups.Length];
 
         for (int i = 0; i < cups.Length; i++)
-            positions[i] = cups[i].position;// Copy positions
+            positions[i] = cups[i].position;
 
-        
-        for (int i = positions.Length - 1; i > 0; i--)// Shuffle randomly
+        bool sameOrder;
+
+        do
         {
-            int j = Random.Range(0, i + 1);
-            (positions[i], positions[j]) = (positions[j], positions[i]);
-        }
+            for (int i = positions.Length - 1; i > 0; i--)
+            {
+                int j = Random.Range(0, i + 1);
+                (positions[i], positions[j]) = (positions[j], positions[i]);
+            }
+
+            sameOrder = true;
+
+            for (int i = 0; i < positions.Length; i++)
+            {
+                if (positions[i] != cups[i].position)
+                {
+                    sameOrder = false;
+                    break;
+                }
+            }
+
+        } while (sameOrder);
 
         for (int i = 0; i < positions.Length; i++)
         {
-            GoToPos.MovePos(this,cups[i],positions[i],duration);
+            GoToPos.MovePos(this, cups[i], positions[i], duration);
         }
     }
 }

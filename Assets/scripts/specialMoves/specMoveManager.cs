@@ -14,6 +14,8 @@ public class specMoveManager : MonoBehaviour
     public specialMove [] moves;
     public LowerCup lowerCup;
     public rollToOther roller;
+    public fakeBall faker;
+    public lvlProgress progression;
     // Start is called before the first frame update
     void Start()
     {
@@ -34,10 +36,14 @@ public class specMoveManager : MonoBehaviour
     public float callSpecialMove()
     {
         foreach (specialMove move in moves){
-            if (Random.Range(0,101)<=move.chance)//do this move
-            {
+            if (progression.level>=move.level&&//high level
+            Random.Range(0,101)<=move.chance)//random chance works
+            {//do this move
                 if (move.name=="roll")
                     return roller.doRoll(lowerCup.cups);
+                else if (move.name=="fake")
+                    return faker.makeBall();
+                
 
                 //return;//do no other moves (for now)
             }

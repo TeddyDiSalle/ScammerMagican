@@ -6,6 +6,7 @@ public class gameOrder : MonoBehaviour
 {
     public setCups cupSetter;
     public LowerCup cupLowerer;
+    public Shuffle shuffler;
     // Start is called before the first frame update
     void Start()
     {
@@ -21,6 +22,7 @@ public class gameOrder : MonoBehaviour
     public void callGame()
     {
         cupSetter.MakeCups();//puts cups + ball in starting pos
+        shuffler.resetShuffleTracker();//reset amount of shuffles
 
         StartCoroutine(cupLowerer.StartRound());//move cups down, begin shuffle
     }

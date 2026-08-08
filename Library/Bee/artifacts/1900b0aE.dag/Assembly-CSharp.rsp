@@ -381,8 +381,10 @@
 "Assets/scripts/basic/loop/lvlProgress.cs"
 "Assets/scripts/basic/loop/ParentBall.cs"
 "Assets/scripts/basic/loop/Shuffle.cs"
+"Assets/scripts/basic/setUp/fadeUp.cs"
 "Assets/scripts/basic/setUp/gameOrder.cs"
 "Assets/scripts/basic/setUp/setCups.cs"
+"Assets/scripts/specialMoves/fakeBall.cs"
 "Assets/scripts/specialMoves/rollToOther.cs"
 "Assets/scripts/specialMoves/specMoveManager.cs"
 -langversion:9.0

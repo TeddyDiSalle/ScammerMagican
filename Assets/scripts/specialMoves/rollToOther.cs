@@ -19,8 +19,11 @@ public class rollToOther : MonoBehaviour
         
     }
 
-    public float doRoll(Transform [] cups)
+    public float doRoll(Transform [] cups,Transform ball = null)
     {
+        if (ball==null)//no fake ball set
+            ball = this.ball;//use real ball
+
         if (ball.parent==null){
             Debug.LogWarning("ball not in cup");
             return 0f;
@@ -36,16 +39,16 @@ public class rollToOther : MonoBehaviour
             if ((i > 0 && cups[i - 1] == cup) && (i < cups.Length - 1 && cups[i + 1] == cup))//ball has cups on left and right
             {
                 if (Random.Range(0,2)==0)//50/50
-                    StartCoroutine(animRoll(cups[i],cups[i-1]));//ball goes right
+                    StartCoroutine(animRoll(ball,cups[i],cups[i-1]));//ball goes right
                 else
-                    StartCoroutine(animRoll(cups[i],cups[i+1]));//ball goes left
+                    StartCoroutine(animRoll(ball,cups[i],cups[i+1]));//ball goes left
                 return duration;
             }
             else if (i>0&&cups[i-1]==cup){//cup to the left has ball
-                StartCoroutine(animRoll(cups[i],cups[i-1]));//anim to this cup (cup to the right of ball)
+                StartCoroutine(animRoll(ball,cups[i],cups[i-1]));//anim to this cup (cup to the right of ball)
                 return duration;
             }else if (i<cups.Length-1&&cups[i+1]==cup){//cup to the right has ball
-                StartCoroutine(animRoll(cups[i],cups[i+1]));//anim to this cup (cup to the left of ball)
+                StartCoroutine(animRoll(ball,cups[i],cups[i+1]));//anim to this cup (cup to the left of ball)
                 return duration;
             }
         }
@@ -53,7 +56,7 @@ public class rollToOther : MonoBehaviour
         return 0f;
     }
 
-    IEnumerator animRoll(Transform nextCup,Transform otherCup)
+    IEnumerator animRoll(Transform ball,Transform nextCup,Transform otherCup)
     {
         //Debug.Log(nextCup);
         ball.parent = null;
