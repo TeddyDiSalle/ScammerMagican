@@ -8,12 +8,14 @@ public class ChooseCup : MonoBehaviour
     public GameObject clickBlocker;
     private lvlProgress progress;
     private LowerCup cupRaiser;
+    private fightManager bossFight;
     // Start is called before the first frame update
     void Start()
     {
         cupRaiser = FindObjectOfType<LowerCup>();
         progress = FindObjectOfType<lvlProgress>();
         clickBlocker = GameObject.Find("clickBlocker");
+        bossFight = FindObjectOfType<fightManager>();
     }
 
     // Update is called once per frame
@@ -24,8 +26,10 @@ public class ChooseCup : MonoBehaviour
 
     void OnMouseDown()
     {
-        if (!clickBlocker.activeSelf)
-            StartCoroutine(DoReveal());
+        if (!clickBlocker.activeSelf){//proper slection time
+            if (!bossFight.haltCup(transform))//check if not boss fight
+                StartCoroutine(DoReveal());//if not boss fight do end of selection
+        }
     }
 
     IEnumerator DoReveal()

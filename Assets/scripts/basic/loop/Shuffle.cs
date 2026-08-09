@@ -9,6 +9,8 @@ public class Shuffle : MonoBehaviour
     public float duration;
     public specMoveManager specialMoves;
     public GameObject clickBlocker;
+    public fightManager bossFight;
+    public List<Coroutine> moveCoroutines;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,10 +28,11 @@ public class Shuffle : MonoBehaviour
         
     }
 
-    public IEnumerator WaitForShuffles(Transform [] cups)
+    public IEnumerator WaitForShuffles(LowerCup lowerCup)
     {
+        StartCoroutine(bossFight.preShuffle());
         //Debug.Log(trackShufflesAmt);
-        doShuffle(cups);
+        doShuffle(lowerCup.cups);
         yield return new WaitForSeconds(duration*1.2f);//a little longer than shuffle time
 
         float specialDuration = specialMoves.shuffleOver();//eventually make this return a float for how long to wait vvvv
@@ -37,13 +40,19 @@ public class Shuffle : MonoBehaviour
 
         trackShufflesAmt --;//used a shuffle amount
         if (trackShufflesAmt>0)//still more shuffles to do
-            StartCoroutine(WaitForShuffles(cups));//run it bacl
+            StartCoroutine(WaitForShuffles(lowerCup));//run it bacl
         else
             clickBlocker.SetActive(false);//allow player to click
     }
 
     public void doShuffle(Transform[] cups)
     {
+        if (cups.Length<=1)
+        {
+            //Debug.LogWarning("only 1 cup left, would break game with while loop");
+            return;
+        }
+        moveCoroutines = new List<Coroutine>(0);
         Vector3[] positions = new Vector3[cups.Length];
 
         for (int i = 0; i < cups.Length; i++)
@@ -74,7 +83,7 @@ public class Shuffle : MonoBehaviour
 
         for (int i = 0; i < positions.Length; i++)
         {
-            GoToPos.MovePos(this, cups[i], positions[i], duration);
+            moveCoroutines.Add(StartCoroutine(GoToPos.MoveCoroutine(cups[i], positions[i], duration)));
         }
     }
 }

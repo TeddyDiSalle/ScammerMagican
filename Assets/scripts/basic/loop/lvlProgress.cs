@@ -13,12 +13,16 @@ public class lvlProgress : MonoBehaviour
     public int winsToProgress;
     public string lossText;
     public string wonText;
+    public fightManager bossFight;
+    public lose loseManager;
+    public won wonManager;
+    public GameObject clickBlocker;
     private int currentWinsInLevel;//track wins until they reach winsToProgress
-    private bool done;
+    public bool done;
     // Start is called before the first frame update
     void Start()
     {
-        
+        clickBlocker = GameObject.Find("clickBlocker");
     }
 
     // Update is called once per frame
@@ -35,19 +39,23 @@ public class lvlProgress : MonoBehaviour
         foreach (GameObject cup in GameObject.FindGameObjectsWithTag("cup"))
             Destroy(cup);
         resetter.callGame();
+        bossFight.checkReady(level);
     }
 
     public void lost()
     {
-        
+        clickBlocker.SetActive(true);
+        loseManager.lost();
         lostText.text = lossText;
         roundOver();
     }
 
     public void won()
     {
-
+        loseManager.won();
         currentWinsInLevel++;
+
+        wonManager.doWin(currentWinsInLevel>=winsToProgress);
         if (currentWinsInLevel>=winsToProgress)
             progressLevel();
 
@@ -70,10 +78,11 @@ public class lvlProgress : MonoBehaviour
             fakeBall.transform.parent = null;
     }
 
-    void progressLevel()
+    public void progressLevel(bool gainLevel = true)
     {
         currentWinsInLevel = 0;
-        level ++;
+        if (gainLevel)
+            level ++;
         if (level >= cupsAtLevels.Length)
         {
             Debug.LogWarning("Reached end of levels");

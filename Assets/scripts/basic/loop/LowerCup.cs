@@ -26,7 +26,7 @@ public class LowerCup : MonoBehaviour
         yield return StartCoroutine(DoLower());
 
         reparenter.SetParent(cups);
-        StartCoroutine(shuffler.WaitForShuffles(cups));
+        StartCoroutine(shuffler.WaitForShuffles(this));
     }
 
     public void lowerCup(Transform cup,bool raiseInstead = false)
