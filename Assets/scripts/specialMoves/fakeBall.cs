@@ -40,7 +40,7 @@ public class fakeBall : MonoBehaviour
         fakeBall.GetComponent<SpriteRenderer>().color = color;
         fakeBall.tag = "fakeBall";
 
-        roller.doRoll(cupArray.cups,fakeBall);
+        roller.doRoll(cupArray.cups, true, fakeBall);
         return roller.duration;
     }
 }

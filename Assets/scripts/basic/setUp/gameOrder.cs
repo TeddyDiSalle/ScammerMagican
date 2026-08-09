@@ -18,7 +18,7 @@ public class gameOrder : MonoBehaviour
         
     }
 
-    void callGame()
+    public void callGame()
     {
         cupSetter.MakeCups();//puts cups + ball in starting pos
 
