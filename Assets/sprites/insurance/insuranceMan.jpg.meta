@@ -1,9 +1,5 @@
 fileFormatVersion: 2
-<<<<<<<< HEAD:Assets/sprites/insurance/insuranceMan.jpg.meta
 guid: 87a853d761d969e4693103aa26915f0f
-========
-guid: 20bc6ecffcfbb1649ba6be0a2c423d98
->>>>>>>> joe-additions:Assets/sprites/Ball_Asset_1.png.meta
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -95,8 +91,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
-<<<<<<<< HEAD:Assets/sprites/insurance/insuranceMan.jpg.meta
-========
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   - serializedVersion: 3
@@ -123,7 +117,6 @@ TextureImporter:
     allowsAlphaSplitting: 0
     overridden: 0
     ignorePlatformSupport: 0
->>>>>>>> joe-additions:Assets/sprites/Ball_Asset_1.png.meta
     androidETC2FallbackOverride: 0
     forceMaximumCompressionQuality_BC6H_BC7: 0
   spriteSheet:
