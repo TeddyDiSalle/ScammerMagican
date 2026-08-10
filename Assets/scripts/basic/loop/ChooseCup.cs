@@ -5,11 +5,17 @@ using UnityEngine;
 public class ChooseCup : MonoBehaviour
 {
     public float revealDelay;
+    public GameObject clickBlocker;
+    private lvlProgress progress;
     private LowerCup cupRaiser;
+    private fightManager bossFight;
     // Start is called before the first frame update
     void Start()
     {
         cupRaiser = FindObjectOfType<LowerCup>();
+        progress = FindObjectOfType<lvlProgress>();
+        clickBlocker = GameObject.Find("clickBlocker");
+        bossFight = FindObjectOfType<fightManager>();
     }
 
     // Update is called once per frame
@@ -20,13 +26,17 @@ public class ChooseCup : MonoBehaviour
 
     void OnMouseDown()
     {
-        StartCoroutine(DoReveal());
+        if (!clickBlocker.activeSelf){//proper slection time
+            if (!bossFight.haltCup(transform))//check if not boss fight
+                StartCoroutine(DoReveal());//if not boss fight do end of selection
+        }
     }
 
     IEnumerator DoReveal()
     {
+        clickBlocker.SetActive(true);//make sure player cant click
         bool won = false;
-        Debug.Log("Sprite clicked!"+gameObject);
+        //Debug.Log("Sprite clicked!"+gameObject);
 
         if (transform.childCount>0&&//has a child
         transform.GetChild(0).gameObject.name=="ball"){//its the ball!
@@ -37,7 +47,13 @@ public class ChooseCup : MonoBehaviour
         cupRaiser.lowerCup(transform,true);
 
         yield return new WaitForSeconds(cupRaiser.duration+revealDelay);
+        progress.initialDone();
 
-        StartCoroutine(cupRaiser.DoLower(true,transform));
+        yield return StartCoroutine(cupRaiser.DoLower(true,transform));
+
+        if (won)
+            progress.won();
+        else
+            progress.lost();
     }
 }

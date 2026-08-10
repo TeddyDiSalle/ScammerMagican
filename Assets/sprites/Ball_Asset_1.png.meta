@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/sprites/Ball_Asset_1.png.meta
 guid: 20bc6ecffcfbb1649ba6be0a2c423d98
+========
+guid: 2f810db32462a7b4fb86dfd231232eae
+>>>>>>>> joe-additions:Assets/sprites/Cup/CupSelect_0000.png.meta
 TextureImporter:
   internalIDToNameTable: []
   externalObjects: {}

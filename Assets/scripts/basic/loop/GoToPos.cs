@@ -17,10 +17,12 @@ public static class GoToPos
         {
             elapsed += Time.deltaTime;
             float t = Mathf.Clamp01(elapsed / duration);
-            target.position = Vector3.Lerp(startPos, endPos, t);
+            if (target!=null)
+                target.position = Vector3.Lerp(startPos, endPos, t);
             yield return null;
         }
 
-        target.position = endPos;
+        if (target!=null)
+            target.position = endPos;
     }
 }
