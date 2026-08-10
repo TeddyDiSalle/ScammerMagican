@@ -17,6 +17,7 @@ public class specMoveManager : MonoBehaviour
     public fakeBall faker;
     public teleport teleporter;
     public catDistraction cat;
+    public smokeScreen smoke;
     public lvlProgress progression;
     // Start is called before the first frame update
     void Start()
@@ -49,6 +50,8 @@ public class specMoveManager : MonoBehaviour
                     return teleporter.doTP(lowerCup.cups);
                 else if (move.name=="cat")
                     return cat.callCat();
+                else if (move.name=="smoke")
+                    return smoke.callSmoke();
 
                 //return;//do no other moves (for now)
             }
