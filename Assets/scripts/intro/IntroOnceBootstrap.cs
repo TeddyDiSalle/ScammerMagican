@@ -7,12 +7,17 @@ public class IntroOnceBootstrap : MonoBehaviour
 {
     private static bool shownThisRun;
 
+    public static bool IsPlaying { get; private set; }
+
     private const string FramePath = "Intro/IntroScene";
 
-    // Doubled timing from the supplied GIF so the intro lasts about 6 seconds.
+    // 24-frame supplied GIF with doubled timing: about 6 seconds total.
     private readonly float[] frameDurations = new float[]
     {
-        0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f, 0.240f, 0.260f
+        0.250f, 0.250f, 0.250f, 0.250f, 0.250f, 0.250f,
+        0.250f, 0.250f, 0.250f, 0.250f, 0.250f, 0.250f,
+        0.250f, 0.250f, 0.250f, 0.250f, 0.250f, 0.250f,
+        0.250f, 0.250f, 0.250f, 0.250f, 0.250f, 0.250f
     };
 
     private Sprite[] frames;
@@ -20,7 +25,6 @@ public class IntroOnceBootstrap : MonoBehaviour
     private CanvasGroup canvasGroup;
 
     private float previousTimeScale;
-    private bool previousAudioPause;
 
     private GameObject insuranceEncounter;
     private bool insuranceWasActive;
@@ -33,6 +37,7 @@ public class IntroOnceBootstrap : MonoBehaviour
     private static void ResetStatics()
     {
         shownThisRun = false;
+        IsPlaying = false;
     }
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -50,11 +55,14 @@ public class IntroOnceBootstrap : MonoBehaviour
 
     private void Awake()
     {
+        IsPlaying = true;
+
         frames = Resources.LoadAll<Sprite>(FramePath);
 
         if (frames == null || frames.Length == 0)
         {
             Debug.LogError("IntroOnce: no frames found at Resources/" + FramePath);
+            IsPlaying = false;
             Destroy(gameObject);
             return;
         }
@@ -62,10 +70,10 @@ public class IntroOnceBootstrap : MonoBehaviour
         Array.Sort(frames, (a, b) => string.CompareOrdinal(a.name, b.name));
 
         previousTimeScale = Time.timeScale;
-        previousAudioPause = AudioListener.pause;
 
+        // Freeze GAMEPLAY, but DO NOT pause the AudioListener.
+        // This allows the background music to play during the intro.
         Time.timeScale = 0f;
-        AudioListener.pause = true;
 
         insuranceEncounter = GameObject.Find("InsuranceEncounter");
         if (insuranceEncounter != null)
@@ -76,14 +84,30 @@ public class IntroOnceBootstrap : MonoBehaviour
 
         BuildOverlay();
         introRoutine = StartCoroutine(PlayIntro());
+        StartCoroutine(StartIntroMusic());
+    }
+
+    private IEnumerator StartIntroMusic()
+    {
+        // AudioManager may initialize during the same startup frame.
+        // Give it a few realtime frames to appear.
+        float timeout = 1f;
+        float elapsed = 0f;
+
+        while (AudioManager.Instance == null && elapsed < timeout)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayGameplayMusic();
     }
 
     private void Update()
     {
         if (!finishing && introCanBeSkipped && Input.anyKeyDown)
-        {
             SkipIntro();
-        }
     }
 
     private void BuildOverlay()
@@ -133,14 +157,19 @@ public class IntroOnceBootstrap : MonoBehaviour
 
     private IEnumerator PlayIntro()
     {
-        // Small delay so the key used to start focus/play does not instantly skip.
+        // Avoid accidental instant skip from the input/focus event that launched play.
         yield return new WaitForSecondsRealtime(0.15f);
         introCanBeSkipped = true;
 
         for (int i = 0; i < frames.Length; i++)
         {
             introImage.sprite = frames[i];
-            float hold = i < frameDurations.Length ? frameDurations[i] : 0.25f;
+
+            float hold =
+                i < frameDurations.Length
+                    ? frameDurations[i]
+                    : 0.25f;
+
             yield return new WaitForSecondsRealtime(hold);
         }
 
@@ -175,7 +204,8 @@ public class IntroOnceBootstrap : MonoBehaviour
             elapsed += Time.unscaledDeltaTime;
 
             if (canvasGroup != null)
-                canvasGroup.alpha = 1f - Mathf.Clamp01(elapsed / fadeDuration);
+                canvasGroup.alpha =
+                    1f - Mathf.Clamp01(elapsed / fadeDuration);
 
             yield return null;
         }
@@ -188,8 +218,8 @@ public class IntroOnceBootstrap : MonoBehaviour
         if (insuranceEncounter != null && insuranceWasActive)
             insuranceEncounter.SetActive(true);
 
-        AudioListener.pause = previousAudioPause;
         Time.timeScale = previousTimeScale;
+        IsPlaying = false;
 
         Debug.Log("Intro finished. Gameplay starting.");
         Destroy(gameObject);
@@ -197,10 +227,9 @@ public class IntroOnceBootstrap : MonoBehaviour
 
     private void OnDestroy()
     {
+        IsPlaying = false;
+
         if (Time.timeScale == 0f)
             Time.timeScale = previousTimeScale;
-
-        if (AudioListener.pause && !previousAudioPause)
-            AudioListener.pause = false;
     }
 }

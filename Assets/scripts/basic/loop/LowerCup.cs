@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class LowerCup : MonoBehaviour
@@ -17,30 +16,29 @@ public class LowerCup : MonoBehaviour
 
     void Update()
     {
-
     }
 
     public IEnumerator StartRound()
     {
-        // IMPORTANT:
-        // Shuffle's internal counter reaches 0 at the end of a round.
-        // Reset it EVERY time a new normal round starts, otherwise later
-        // rounds lower the cups and immediately skip all shuffle movement.
+        // Reset the shuffle count for EVERY round.
         if (shuffler != null)
             shuffler.resetShuffleTracker();
 
-        // Normal gameplay music for the cover/shuffle portion.
         if (AudioManager.Instance != null)
         {
+            // Start/keep the main gameplay music going.
             AudioManager.Instance.PlayGameplayMusic();
-            AudioManager.Instance.PlayBallDrop();
+
+            // During the opening intro we want MUSIC, but not the gameplay
+            // ball-drop SFX playing invisibly behind the cutscene.
+            if (!IntroOnceBootstrap.IsPlaying)
+                AudioManager.Instance.PlayBallDrop();
         }
 
         // Keep the ball visible while the cups come down over it.
         yield return StartCoroutine(DoLower());
 
-        // Once the cups are fully down, attach the ball to the correct cup
-        // so it follows that cup during the shuffle.
+        // Once covered, attach the ball to the correct cup.
         if (reparenter != null)
             reparenter.SetParent(cups);
 
@@ -54,11 +52,9 @@ public class LowerCup : MonoBehaviour
                 ballRenderer.enabled = false;
         }
 
-        // Start the looping shuffle SFX only during the actual shuffle.
         if (AudioManager.Instance != null)
             AudioManager.Instance.StartShuffleSfx();
 
-        // Begin shuffling after the ball is covered and hidden.
         if (shuffler != null)
         {
             StartCoroutine(shuffler.WaitForShuffles(this));
@@ -100,12 +96,8 @@ public class LowerCup : MonoBehaviour
             if (cup == null)
                 continue;
 
-            // Remove all children before raising/lowering so the ball and
-            // fake balls are not accidentally destroyed with a cup.
             while (cup.childCount > 0)
-            {
                 cup.GetChild(0).SetParent(null, true);
-            }
 
             if (cup != ignore)
                 lowerCup(cup, raiseInstead);
