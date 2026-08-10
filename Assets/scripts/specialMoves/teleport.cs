@@ -10,24 +10,15 @@ public class teleport : MonoBehaviour
     public Transform portal;
     public Transform ball;
     public float downAmount;
-    // Start is called before the first frame update
+
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        SetupPortalVisual();
     }
 
     public float doTP(Transform [] cups)
     {
         roller.doRoll(cups);
-
-        
-
         return delay;
     }
 
@@ -74,5 +65,47 @@ public class teleport : MonoBehaviour
         }
 
         Destroy(obj.gameObject);
+    }
+
+    private void SetupPortalVisual()
+    {
+        if (portal == null)
+            return;
+
+        Sprite[] portalFrames = animSprite.LoadSpritesFromResources("Art/PortalAnim");
+        if (portalFrames == null || portalFrames.Length == 0)
+            return;
+
+        foreach (SpriteRenderer sr in portal.GetComponentsInChildren<SpriteRenderer>(true))
+            sr.enabled = false;
+
+        Transform visual = portal.Find("AnimatedPortal");
+        if (visual == null)
+        {
+            GameObject visualGO = new GameObject("AnimatedPortal");
+            visualGO.transform.SetParent(portal, false);
+            visualGO.transform.localPosition = Vector3.zero;
+            visualGO.transform.localScale = Vector3.one;
+            visual = visualGO.transform;
+        }
+
+        SpriteRenderer renderer = visual.GetComponent<SpriteRenderer>();
+        if (renderer == null)
+            renderer = visual.gameObject.AddComponent<SpriteRenderer>();
+
+        renderer.enabled = true;
+        renderer.sortingOrder = 1;
+        renderer.sprite = portalFrames[0];
+
+        animSprite animator = visual.GetComponent<animSprite>();
+        if (animator == null)
+            animator = visual.gameObject.AddComponent<animSprite>();
+
+        animator.sprites = portalFrames;
+        animator.frameRate = 10f;
+        animator.startAt0 = true;
+        animator.holdLastFrame = false;
+        animator.useUnscaledTime = true;
+        animator.RestartAnimation();
     }
 }

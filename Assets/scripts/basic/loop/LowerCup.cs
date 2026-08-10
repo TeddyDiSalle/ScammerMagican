@@ -10,13 +10,11 @@ public class LowerCup : MonoBehaviour
     public Shuffle shuffler;
     public ParentBall reparenter;
 
-    // Start is called before the first frame update
     void Start()
     {
         //StartCoroutine(StartRound());
     }
 
-    // Update is called once per frame
     void Update()
     {
 
@@ -24,6 +22,13 @@ public class LowerCup : MonoBehaviour
 
     public IEnumerator StartRound()
     {
+        // IMPORTANT:
+        // Shuffle's internal counter reaches 0 at the end of a round.
+        // Reset it EVERY time a new normal round starts, otherwise later
+        // rounds lower the cups and immediately skip all shuffle movement.
+        if (shuffler != null)
+            shuffler.resetShuffleTracker();
+
         // Normal gameplay music for the cover/shuffle portion.
         if (AudioManager.Instance != null)
         {
@@ -31,8 +36,7 @@ public class LowerCup : MonoBehaviour
             AudioManager.Instance.PlayBallDrop();
         }
 
-        // Keep the ball VISIBLE while the cups come down over it.
-        // This preserves the reveal/cover animation at the start of the round.
+        // Keep the ball visible while the cups come down over it.
         yield return StartCoroutine(DoLower());
 
         // Once the cups are fully down, attach the ball to the correct cup
@@ -40,7 +44,7 @@ public class LowerCup : MonoBehaviour
         if (reparenter != null)
             reparenter.SetParent(cups);
 
-        // NOW hide the ball for the actual shuffle movement.
+        // Hide the real ball only during the actual shuffle.
         if (reparenter != null && reparenter.ball != null)
         {
             SpriteRenderer ballRenderer =
@@ -54,9 +58,17 @@ public class LowerCup : MonoBehaviour
         if (AudioManager.Instance != null)
             AudioManager.Instance.StartShuffleSfx();
 
-        // Begin shuffling only after the ball is covered and hidden.
+        // Begin shuffling after the ball is covered and hidden.
         if (shuffler != null)
+        {
             StartCoroutine(shuffler.WaitForShuffles(this));
+        }
+        else
+        {
+            Debug.LogError(
+                "LowerCup has no Shuffle reference assigned."
+            );
+        }
     }
 
     public void lowerCup(Transform cup, bool raiseInstead = false)
@@ -88,18 +100,15 @@ public class LowerCup : MonoBehaviour
             if (cup == null)
                 continue;
 
-            // Remove ALL children, not just child 0.
-            // This keeps the real ball/fake balls from being destroyed with a cup
-            // and lets the reveal show what was underneath each cup.
+            // Remove all children before raising/lowering so the ball and
+            // fake balls are not accidentally destroyed with a cup.
             while (cup.childCount > 0)
             {
                 cup.GetChild(0).SetParent(null, true);
             }
 
             if (cup != ignore)
-            {
                 lowerCup(cup, raiseInstead);
-            }
         }
 
         yield return new WaitForSeconds(duration);

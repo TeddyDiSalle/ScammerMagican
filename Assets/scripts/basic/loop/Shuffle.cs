@@ -12,6 +12,11 @@ public class Shuffle : MonoBehaviour
     public fightManager bossFight;
     public List<Coroutine> moveCoroutines = new List<Coroutine>();
 
+    // Every new shuffle run gets an ID. If a round resets/destroys cups,
+    // CancelActiveShuffles invalidates the old coroutine so it cannot continue
+    // trying to shuffle destroyed Transform references.
+    private int shuffleRunId = 0;
+
     void Start()
     {
         resetShuffleTracker();
@@ -22,34 +27,80 @@ public class Shuffle : MonoBehaviour
         trackShufflesAmt = shufflesAmt;
     }
 
+    public void CancelActiveShuffles()
+    {
+        shuffleRunId++;
+
+        foreach (Coroutine movement in moveCoroutines)
+        {
+            if (movement != null)
+                StopCoroutine(movement);
+        }
+
+        moveCoroutines.Clear();
+
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.StopShuffleSfx();
+    }
+
     public IEnumerator WaitForShuffles(LowerCup lowerCup)
     {
-        if (lowerCup == null || lowerCup.cups == null || lowerCup.cups.Length == 0)
+        int myRunId = ++shuffleRunId;
+
+        while (trackShufflesAmt > 0)
         {
-            EndShuffleAudio();
-            yield break;
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            if (lowerCup == null || lowerCup.cups == null)
+            {
+                StopShuffleAudioOnly();
+                yield break;
+            }
+
+            // Remove any cups that were already destroyed before this shuffle.
+            lowerCup.cups = GetValidCups(lowerCup.cups);
+
+            if (lowerCup.cups.Length <= 1)
+            {
+                StopShuffleAudioOnly();
+                yield break;
+            }
+
+            if (bossFight != null)
+                StartCoroutine(bossFight.preShuffle());
+
+            doShuffle(lowerCup.cups);
+
+            yield return new WaitForSeconds(duration * 1.2f);
+
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            // A cup can disappear during the boss fight or a reset.
+            lowerCup.cups = GetValidCups(lowerCup.cups);
+
+            if (lowerCup.cups.Length <= 1)
+            {
+                StopShuffleAudioOnly();
+                yield break;
+            }
+
+            if (specialMoves != null)
+            {
+                float specialDuration = specialMoves.shuffleOver();
+
+                if (specialDuration > 0f)
+                    yield return new WaitForSeconds(specialDuration);
+            }
+
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            trackShufflesAmt--;
         }
 
-        if (bossFight != null)
-            StartCoroutine(bossFight.preShuffle());
-
-        doShuffle(lowerCup.cups);
-        yield return new WaitForSeconds(duration * 1.2f);
-
-        if (specialMoves != null)
-        {
-            float specialDuration = specialMoves.shuffleOver();
-            if (specialDuration > 0f)
-                yield return new WaitForSeconds(specialDuration);
-        }
-
-        trackShufflesAmt--;
-
-        if (trackShufflesAmt > 0)
-        {
-            StartCoroutine(WaitForShuffles(lowerCup));
-        }
-        else
+        if (myRunId == shuffleRunId)
         {
             EndShuffleAudio();
 
@@ -61,35 +112,81 @@ public class Shuffle : MonoBehaviour
     // Compatibility overload for scripts that still pass a Transform array.
     public IEnumerator WaitForShuffles(Transform[] cups)
     {
-        if (cups == null || cups.Length == 0)
+        int myRunId = ++shuffleRunId;
+
+        Transform[] workingCups = GetValidCups(cups);
+
+        while (trackShufflesAmt > 0)
         {
-            EndShuffleAudio();
-            yield break;
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            workingCups = GetValidCups(workingCups);
+
+            if (workingCups.Length <= 1)
+            {
+                StopShuffleAudioOnly();
+                yield break;
+            }
+
+            doShuffle(workingCups);
+
+            yield return new WaitForSeconds(duration * 1.2f);
+
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            workingCups = GetValidCups(workingCups);
+
+            if (workingCups.Length <= 1)
+            {
+                StopShuffleAudioOnly();
+                yield break;
+            }
+
+            if (specialMoves != null)
+            {
+                float specialDuration = specialMoves.shuffleOver();
+
+                if (specialDuration > 0f)
+                    yield return new WaitForSeconds(specialDuration);
+            }
+
+            if (myRunId != shuffleRunId)
+                yield break;
+
+            trackShufflesAmt--;
         }
 
-        doShuffle(cups);
-        yield return new WaitForSeconds(duration * 1.2f);
-
-        if (specialMoves != null)
-        {
-            float specialDuration = specialMoves.shuffleOver();
-            if (specialDuration > 0f)
-                yield return new WaitForSeconds(specialDuration);
-        }
-
-        trackShufflesAmt--;
-
-        if (trackShufflesAmt > 0)
-        {
-            StartCoroutine(WaitForShuffles(cups));
-        }
-        else
+        if (myRunId == shuffleRunId)
         {
             EndShuffleAudio();
 
             if (clickBlocker != null)
                 clickBlocker.SetActive(false);
         }
+    }
+
+    private Transform[] GetValidCups(Transform[] cups)
+    {
+        if (cups == null)
+            return new Transform[0];
+
+        List<Transform> valid = new List<Transform>();
+
+        foreach (Transform cup in cups)
+        {
+            if (cup != null)
+                valid.Add(cup);
+        }
+
+        return valid.ToArray();
+    }
+
+    private void StopShuffleAudioOnly()
+    {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.StopShuffleSfx();
     }
 
     private void EndShuffleAudio()
@@ -103,18 +200,29 @@ public class Shuffle : MonoBehaviour
 
     public void doShuffle(Transform[] cups)
     {
-        if (cups == null || cups.Length <= 1)
-        {
-            Debug.LogWarning("Not enough cups to shuffle.");
+        Transform[] validCups = GetValidCups(cups);
+
+        if (validCups.Length <= 1)
             return;
+
+        // Stop only the movement coroutines from the previous shuffle step.
+        foreach (Coroutine movement in moveCoroutines)
+        {
+            if (movement != null)
+                StopCoroutine(movement);
         }
 
         moveCoroutines.Clear();
 
-        Vector3[] positions = new Vector3[cups.Length];
+        Vector3[] positions = new Vector3[validCups.Length];
 
-        for (int i = 0; i < cups.Length; i++)
-            positions[i] = cups[i].position;
+        for (int i = 0; i < validCups.Length; i++)
+        {
+            if (validCups[i] == null)
+                return;
+
+            positions[i] = validCups[i].position;
+        }
 
         bool sameOrder;
 
@@ -123,14 +231,18 @@ public class Shuffle : MonoBehaviour
             for (int i = positions.Length - 1; i > 0; i--)
             {
                 int j = Random.Range(0, i + 1);
-                (positions[i], positions[j]) = (positions[j], positions[i]);
+                (positions[i], positions[j]) =
+                    (positions[j], positions[i]);
             }
 
             sameOrder = true;
 
             for (int i = 0; i < positions.Length; i++)
             {
-                if (positions[i] != cups[i].position)
+                if (validCups[i] == null)
+                    return;
+
+                if (positions[i] != validCups[i].position)
                 {
                     sameOrder = false;
                     break;
@@ -141,8 +253,15 @@ public class Shuffle : MonoBehaviour
 
         for (int i = 0; i < positions.Length; i++)
         {
+            if (validCups[i] == null)
+                continue;
+
             Coroutine movement = StartCoroutine(
-                GoToPos.MoveCoroutine(cups[i], positions[i], duration)
+                GoToPos.MoveCoroutine(
+                    validCups[i],
+                    positions[i],
+                    duration
+                )
             );
 
             moveCoroutines.Add(movement);

@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
@@ -8,8 +7,8 @@ public class lvlProgress : MonoBehaviour
     public TextMeshProUGUI lostText;
     public gameOrder resetter;
     public setCups cupSetter;
-    public int [] cupsAtLevels;//how many cups at each level
-    public int level = 0;//levels of complexity
+    public int [] cupsAtLevels;
+    public int level = 0;
     public int winsToProgress;
     public string lossText;
     public string wonText;
@@ -17,18 +16,18 @@ public class lvlProgress : MonoBehaviour
     public lose loseManager;
     public won wonManager;
     public GameObject clickBlocker;
-    private int currentWinsInLevel;//track wins until they reach winsToProgress
+
+    private int currentWinsInLevel;
     public bool done;
-    // Start is called before the first frame update
+
     void Start()
     {
         clickBlocker = GameObject.Find("clickBlocker");
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (done&&Input.anyKeyDown)
+        if (done && Input.anyKeyDown)
             reset();
     }
 
@@ -45,27 +44,38 @@ public class lvlProgress : MonoBehaviour
 
     private IEnumerator ResetRoutine()
     {
-        // VERY IMPORTANT:
+        // Stop the OLD round's shuffle coroutine before any cup is destroyed.
+        // This is what prevents Shuffle from continuing with destroyed Transforms.
+        if (cupSetter != null &&
+            cupSetter.cupLower != null &&
+            cupSetter.cupLower.shuffler != null)
+        {
+            cupSetter.cupLower.shuffler.CancelActiveShuffles();
+        }
+
         // The real ball must survive when the old cups are destroyed.
         if (cupSetter != null && cupSetter.ball != null)
-        {
             cupSetter.ball.SetParent(null, true);
-        }
 
-        // Destroy all old cups.
         foreach (GameObject cup in GameObject.FindGameObjectsWithTag("cup"))
-        {
             Destroy(cup);
-        }
 
-        // Clear old cup references.
-        if (cupSetter != null &&
-            cupSetter.cupLower != null)
-        {
+        if (cupSetter != null && cupSetter.cupLower != null)
             cupSetter.cupLower.cups = new Transform[0];
+
+        // Restore the normal magician idle after a win/loss reaction.
+        GameObject magicianGO = GameObject.Find("magician");
+
+        if (magicianGO != null)
+        {
+            animSprite magician =
+                magicianGO.GetComponent<animSprite>();
+
+            if (magician != null)
+                magician.ResetToDefault();
         }
 
-        // Give Unity one frame to actually destroy the old cups.
+        // Let Unity finish destroying the previous cups.
         yield return null;
 
         resetter.callGame();
@@ -79,7 +89,9 @@ public class lvlProgress : MonoBehaviour
         if (AudioManager.Instance != null)
             AudioManager.Instance.PlayLoseStinger();
 
-        clickBlocker.SetActive(true);
+        if (clickBlocker != null)
+            clickBlocker.SetActive(true);
+
         loseManager.lost();
         lostText.text = lossText;
         roundOver();
@@ -93,12 +105,14 @@ public class lvlProgress : MonoBehaviour
         loseManager.won();
         currentWinsInLevel++;
 
-        wonManager.doWin(currentWinsInLevel>=winsToProgress);
-        if (currentWinsInLevel>=winsToProgress)
+        bool advancing = currentWinsInLevel >= winsToProgress;
+
+        wonManager.doWin(advancing);
+
+        if (advancing)
             progressLevel();
 
         roundOver();
-
         lostText.text = wonText;
     }
 
@@ -106,14 +120,22 @@ public class lvlProgress : MonoBehaviour
     {
         done = true;
 
-        foreach (GameObject fakeBall in GameObject.FindGameObjectsWithTag("fakeBall"))
-            StartCoroutine(fadeUp.MoveUpAndFade(fakeBall,1f,.5f));
+        foreach (GameObject fakeBall
+                 in GameObject.FindGameObjectsWithTag("fakeBall"))
+        {
+            StartCoroutine(
+                fadeUp.MoveUpAndFade(fakeBall, 1f, .5f)
+            );
+        }
     }
 
-    public void initialDone()//called before the cups rise
+    public void initialDone()
     {
-        foreach (GameObject fakeBall in GameObject.FindGameObjectsWithTag("fakeBall"))
+        foreach (GameObject fakeBall
+                 in GameObject.FindGameObjectsWithTag("fakeBall"))
+        {
             fakeBall.transform.parent = null;
+        }
     }
 
     public void progressLevel(bool gainLevel = true)
@@ -123,17 +145,28 @@ public class lvlProgress : MonoBehaviour
         if (gainLevel)
             level++;
 
-        // Protect against invalid negative levels.
         if (level < 0)
         {
-            Debug.LogWarning("Level went below 0.");
+            level = 0;
             return;
         }
 
-        // Protect against going past the final level.
-        if (level >= cupsAtLevels.Length)
+        if (cupsAtLevels == null || cupsAtLevels.Length == 0)
+            return;
+
+        // Your scene has four normal cup levels (0-3), and bossFight starts
+        // at level 4. Therefore level == cupsAtLevels.Length is intentional:
+        // it means "normal levels finished; enter boss fight."
+        if (level == cupsAtLevels.Length)
         {
-            Debug.LogWarning("Reached end of levels.");
+            Debug.Log("Normal levels complete. Boss fight unlocked.");
+            return;
+        }
+
+        // Do not allow progression beyond the boss threshold.
+        if (level > cupsAtLevels.Length)
+        {
+            level = cupsAtLevels.Length;
             return;
         }
 
