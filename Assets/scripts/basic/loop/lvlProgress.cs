@@ -33,15 +33,15 @@ public class lvlProgress : MonoBehaviour
     }
 
     public void reset()
-{
-    if (!done)
-        return;
+    {
+        if (!done)
+            return;
 
-    done = false;
-    lostText.text = "";
+        done = false;
+        lostText.text = "";
 
-    StartCoroutine(ResetRoutine());
-}
+        StartCoroutine(ResetRoutine());
+    }
 
     private IEnumerator ResetRoutine()
     {
@@ -76,6 +76,9 @@ public class lvlProgress : MonoBehaviour
 
     public void lost()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayLoseStinger();
+
         clickBlocker.SetActive(true);
         loseManager.lost();
         lostText.text = lossText;
@@ -84,6 +87,9 @@ public class lvlProgress : MonoBehaviour
 
     public void won()
     {
+        if (AudioManager.Instance != null)
+            AudioManager.Instance.PlayWinStinger();
+
         loseManager.won();
         currentWinsInLevel++;
 
@@ -92,7 +98,7 @@ public class lvlProgress : MonoBehaviour
             progressLevel();
 
         roundOver();
-        
+
         lostText.text = wonText;
     }
 
@@ -111,26 +117,26 @@ public class lvlProgress : MonoBehaviour
     }
 
     public void progressLevel(bool gainLevel = true)
-{
-    currentWinsInLevel = 0;
-
-    if (gainLevel)
-        level++;
-
-    // Protect against invalid negative levels.
-    if (level < 0)
     {
-        Debug.LogWarning("Level went below 0.");
-        return;
-    }
+        currentWinsInLevel = 0;
 
-    // Protect against going past the final level.
-    if (level >= cupsAtLevels.Length)
-    {
-        Debug.LogWarning("Reached end of levels.");
-        return;
-    }
+        if (gainLevel)
+            level++;
 
-    cupSetter.cupsAmt = cupsAtLevels[level];
-}
+        // Protect against invalid negative levels.
+        if (level < 0)
+        {
+            Debug.LogWarning("Level went below 0.");
+            return;
+        }
+
+        // Protect against going past the final level.
+        if (level >= cupsAtLevels.Length)
+        {
+            Debug.LogWarning("Reached end of levels.");
+            return;
+        }
+
+        cupSetter.cupsAmt = cupsAtLevels[level];
+    }
 }

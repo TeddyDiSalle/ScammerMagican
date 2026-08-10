@@ -25,7 +25,10 @@ public class Shuffle : MonoBehaviour
     public IEnumerator WaitForShuffles(LowerCup lowerCup)
     {
         if (lowerCup == null || lowerCup.cups == null || lowerCup.cups.Length == 0)
+        {
+            EndShuffleAudio();
             yield break;
+        }
 
         if (bossFight != null)
             StartCoroutine(bossFight.preShuffle());
@@ -46,9 +49,12 @@ public class Shuffle : MonoBehaviour
         {
             StartCoroutine(WaitForShuffles(lowerCup));
         }
-        else if (clickBlocker != null)
+        else
         {
-            clickBlocker.SetActive(false);
+            EndShuffleAudio();
+
+            if (clickBlocker != null)
+                clickBlocker.SetActive(false);
         }
     }
 
@@ -56,7 +62,10 @@ public class Shuffle : MonoBehaviour
     public IEnumerator WaitForShuffles(Transform[] cups)
     {
         if (cups == null || cups.Length == 0)
+        {
+            EndShuffleAudio();
             yield break;
+        }
 
         doShuffle(cups);
         yield return new WaitForSeconds(duration * 1.2f);
@@ -74,10 +83,22 @@ public class Shuffle : MonoBehaviour
         {
             StartCoroutine(WaitForShuffles(cups));
         }
-        else if (clickBlocker != null)
+        else
         {
-            clickBlocker.SetActive(false);
+            EndShuffleAudio();
+
+            if (clickBlocker != null)
+                clickBlocker.SetActive(false);
         }
+    }
+
+    private void EndShuffleAudio()
+    {
+        if (AudioManager.Instance == null)
+            return;
+
+        AudioManager.Instance.StopShuffleSfx();
+        AudioManager.Instance.PlaySelectionMusic();
     }
 
     public void doShuffle(Transform[] cups)

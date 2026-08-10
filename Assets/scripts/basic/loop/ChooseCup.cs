@@ -42,6 +42,11 @@ public class ChooseCup : MonoBehaviour
             // If there is no boss manager, normal gameplay still works.
             if (bossFight == null || !bossFight.haltCup(transform))
             {
+                // Leave selection music and return to the main gameplay loop
+                // as soon as the player commits to a cup.
+                if (AudioManager.Instance != null)
+                    AudioManager.Instance.PlayGameplayMusic();
+
                 StartCoroutine(DoReveal());
             }
         }
@@ -58,12 +63,24 @@ public class ChooseCup : MonoBehaviour
 
         clickBlocker.SetActive(true);
 
+        // The ball is hidden only during the actual shuffle.
+        // Turn it back on BEFORE any cup begins its reveal/lift animation.
+        if (cupRaiser.reparenter != null &&
+            cupRaiser.reparenter.ball != null)
+        {
+            SpriteRenderer ballRenderer =
+                cupRaiser.reparenter.ball.GetComponent<SpriteRenderer>();
+
+            if (ballRenderer != null)
+                ballRenderer.enabled = true;
+        }
+
         bool won = false;
 
         if (transform.childCount > 0 &&
             transform.GetChild(0).gameObject.name == "ball")
         {
-            transform.GetChild(0).SetParent(null);
+            transform.GetChild(0).SetParent(null, true);
             won = true;
         }
 
