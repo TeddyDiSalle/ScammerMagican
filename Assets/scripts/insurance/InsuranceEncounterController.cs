@@ -66,6 +66,11 @@ public class InsuranceEncounterController : MonoBehaviour
     private EncounterState state = EncounterState.Waiting;
     private int lineIndex;
     private float previousTimeScale = 1f;
+    private Coroutine salesmanBounceCoroutine;
+    private Vector3 salesmanOriginalPosition;
+    private bool salesmanOriginalPositionSaved = false;
+
+[SerializeField] private float salesmanBounceSpeed = 700f;
 
     // We remember exactly which cup colliders were enabled so we can restore them safely.
     private readonly Dictionary<Collider2D, bool> cupColliderStates = new Dictionary<Collider2D, bool>();
@@ -179,15 +184,181 @@ public class InsuranceEncounterController : MonoBehaviour
             return;
 
         state = EncounterState.Contract;
+
         SetPanel(decisionPanel, false);
         SetPanel(dialoguePanel, false);
         SetPanel(contractPanel, true);
+        SetPanel(salesmanVisual, true);
 
         if (signaturePad != null)
             signaturePad.Clear();
 
         if (contractHintText != null)
-            contractHintText.text = "Sign your name below. Totally normal contract. Definitely read all of it.";
+            contractHintText.text =
+                "Sign your name below. Totally normal contract. Definitely read all of it.";
+
+        // Keep salesman BEHIND the contract
+        if (salesmanVisual != null)
+            salesmanVisual.transform.SetAsFirstSibling();
+
+        // Keep contract ABOVE salesman
+        if (contractPanel != null)
+            contractPanel.transform.SetAsLastSibling();
+
+        salesmanBounceCoroutine = StartCoroutine(BounceSalesmanAroundScreen());
+        StartCoroutine(StretchinDialogue());
+    }
+
+    private IEnumerator StretchinDialogue()
+    {
+        // Game is paused, so this MUST use realtime.
+        yield return new WaitForSecondsRealtime(3f);
+
+        if (state != EncounterState.Contract)
+            yield break;
+
+        if (speakerText != null)
+            speakerText.text = "INSURANCE GUY";
+
+        if (dialogueText != null)
+            dialogueText.text = "Just stretchin'.";
+
+        SetPanel(dialoguePanel, true);
+
+        // Put dialogue above the bouncing salesman.
+        if (dialoguePanel != null)
+            dialoguePanel.transform.SetAsLastSibling();
+
+        // He NEVER stops bouncing here.
+        yield return new WaitForSecondsRealtime(2f);
+
+        if (state == EncounterState.Contract)
+            SetPanel(dialoguePanel, false);
+    }
+
+private IEnumerator BounceSalesmanAroundScreen()
+{
+    if (salesmanVisual == null)
+        yield break;
+
+    RectTransform salesmanRect =
+        salesmanVisual.GetComponent<RectTransform>();
+
+    RectTransform parentRect =
+        salesmanRect.parent as RectTransform;
+
+    if (salesmanRect == null || parentRect == null)
+        yield break;
+
+    // Remember exactly where he originally stood.
+    salesmanOriginalPosition = salesmanRect.localPosition;
+    salesmanOriginalPositionSaved = true;
+
+    // Start diagonally.
+    Vector2 direction = new Vector2(1f, 1f).normalized;
+
+    while (state == EncounterState.Contract)
+    {
+        float delta = Time.unscaledDeltaTime;
+
+        Vector3 position = salesmanRect.localPosition;
+
+        position.x += direction.x * salesmanBounceSpeed * delta;
+        position.y += direction.y * salesmanBounceSpeed * delta;
+
+        // Size of the salesman.
+        float halfWidth =
+            salesmanRect.rect.width * Mathf.Abs(salesmanRect.localScale.x) / 2f;
+
+        float halfHeight =
+            salesmanRect.rect.height * Mathf.Abs(salesmanRect.localScale.y) / 2f;
+
+        // Edges of the entire parent Canvas.
+        float leftEdge = parentRect.rect.xMin + halfWidth;
+        float rightEdge = parentRect.rect.xMax - halfWidth;
+
+        float bottomEdge = parentRect.rect.yMin + halfHeight;
+        float topEdge = parentRect.rect.yMax - halfHeight;
+
+        // Bounce off left/right.
+        if (position.x <= leftEdge)
+        {
+            position.x = leftEdge;
+            direction.x = Mathf.Abs(direction.x);
+        }
+        else if (position.x >= rightEdge)
+        {
+            position.x = rightEdge;
+            direction.x = -Mathf.Abs(direction.x);
+        }
+
+        // Bounce off top/bottom.
+        if (position.y <= bottomEdge)
+        {
+            position.y = bottomEdge;
+            direction.y = Mathf.Abs(direction.y);
+        }
+        else if (position.y >= topEdge)
+        {
+            position.y = topEdge;
+            direction.y = -Mathf.Abs(direction.y);
+        }
+
+        salesmanRect.localPosition = position;
+
+        yield return null;
+    }
+}
+
+    private IEnumerator ContractStretchGag()
+    {
+        if (salesmanVisual == null)
+            yield break;
+
+        RectTransform salesmanRect = salesmanVisual.GetComponent<RectTransform>();
+
+        if (salesmanRect == null)
+            yield break;
+
+        Vector2 startingPosition = salesmanRect.anchoredPosition;
+
+        float duration = 3f;
+        float bounceHeight = 45f;
+        float bounceSpeed = 10f;
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+
+            float bounce =
+                Mathf.Abs(Mathf.Sin(elapsed * bounceSpeed)) * bounceHeight;
+
+            salesmanRect.anchoredPosition =
+                startingPosition + Vector2.up * bounce;
+
+            yield return null;
+        }
+
+        // Put him back exactly where he started.
+        salesmanRect.anchoredPosition = startingPosition;
+
+        // His extremely important explanation.
+        if (speakerText != null)
+            speakerText.text = "INSURANCE GUY";
+
+        if (dialogueText != null)
+            dialogueText.text = "Just stretchin'.";
+
+        SetPanel(dialoguePanel, true);
+
+        // IMPORTANT: Realtime because Time.timeScale is currently zero.
+        yield return new WaitForSecondsRealtime(2f);
+
+        // Get the dialogue box back out of the way so they can sign.
+        if (state == EncounterState.Contract)
+            SetPanel(dialoguePanel, false);
     }
 
     public void FinishSigning()
@@ -198,11 +369,35 @@ public class InsuranceEncounterController : MonoBehaviour
         if (signaturePad != null && !signaturePad.HasSignature)
         {
             if (contractHintText != null)
-                contractHintText.text = "Nice try. The dotted line requires at least SOME scribbling.";
+                contractHintText.text =
+                    "Nice try. The dotted line requires at least SOME scribbling.";
+
+            // IMPORTANT:
+            // He keeps bouncing if they haven't actually signed.
             return;
         }
 
+        StopSalesmanBounce();
+
         EndEncounter();
+    }
+
+    private void StopSalesmanBounce()
+    {
+        if (salesmanBounceCoroutine != null)
+        {
+            StopCoroutine(salesmanBounceCoroutine);
+            salesmanBounceCoroutine = null;
+        }
+
+        if (salesmanVisual != null && salesmanOriginalPositionSaved)
+        {
+            RectTransform salesmanRect =
+                salesmanVisual.GetComponent<RectTransform>();
+
+            if (salesmanRect != null)
+                salesmanRect.localPosition = salesmanOriginalPosition;
+        }
     }
 
     private void EndEncounter()
