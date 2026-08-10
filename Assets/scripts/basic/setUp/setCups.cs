@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections.Generic;
 
 public class setCups : MonoBehaviour
 {
@@ -46,5 +45,23 @@ public class setCups : MonoBehaviour
         }
 
         cupLower.cups = cups.ToArray();
+    }
+
+    public List<Vector2> getCupPositions()
+    {
+        List<Vector2> positions = new List<Vector2>();
+
+        float totalWidth = 2 * border;
+        float cupDistance = totalWidth / cupsAmt;
+
+        for (int i = 0; i < cupsAmt; i++)
+        {
+            positions.Add(new Vector2(
+                -border + cupDistance / 2f + cupDistance * i,
+                setY
+            ));
+        }
+
+        return positions;
     }
 }

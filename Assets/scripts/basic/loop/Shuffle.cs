@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Shuffle : MonoBehaviour
@@ -7,46 +6,70 @@ public class Shuffle : MonoBehaviour
     public int shufflesAmt;
     private int trackShufflesAmt;
     public float duration;
-    // Start is called before the first frame update
+
+    // fightManager needs the currently-running movement coroutine for each cup
+    // so it can stop a selected cup during the boss fight.
+    public Coroutine[] moveCoroutines = new Coroutine[0];
+
     void Start()
+    {
+        resetShuffleTracker();
+    }
+
+    public void resetShuffleTracker()
     {
         trackShufflesAmt = shufflesAmt;
     }
 
-    // Update is called once per frame
-    void Update()
+    public IEnumerator WaitForShuffles(Transform[] cups)
     {
-        
-    }
+        if (cups == null || cups.Length == 0)
+            yield break;
 
-    public IEnumerator WaitForShuffles(Transform [] cups)
-    {
         Debug.Log(trackShufflesAmt);
-        yield return new WaitForSeconds(duration*1.2f);//a little longer than shuffle time
+
+        yield return new WaitForSeconds(duration * 1.2f);
+
         doShuffle(cups);
 
-        trackShufflesAmt --;//used a shuffle amount
-        if (trackShufflesAmt>0)//still more shuffles to do
-            StartCoroutine(WaitForShuffles(cups));//run it bacl
+        trackShufflesAmt--;
+
+        if (trackShufflesAmt > 0)
+            StartCoroutine(WaitForShuffles(cups));
     }
 
-    public void doShuffle(Transform [] cups)
+    // Compatibility overload used by fightManager after the merge.
+    public IEnumerator WaitForShuffles(LowerCup lowerCup)
     {
+        if (lowerCup == null)
+            yield break;
+
+        yield return StartCoroutine(WaitForShuffles(lowerCup.cups));
+    }
+
+    public void doShuffle(Transform[] cups)
+    {
+        if (cups == null || cups.Length == 0)
+            return;
+
         Vector3[] positions = new Vector3[cups.Length];
 
         for (int i = 0; i < cups.Length; i++)
-            positions[i] = cups[i].position;// Copy positions
+            positions[i] = cups[i].position;
 
-        
-        for (int i = positions.Length - 1; i > 0; i--)// Shuffle randomly
+        for (int i = positions.Length - 1; i > 0; i--)
         {
             int j = Random.Range(0, i + 1);
             (positions[i], positions[j]) = (positions[j], positions[i]);
         }
 
+        moveCoroutines = new Coroutine[cups.Length];
+
         for (int i = 0; i < positions.Length; i++)
         {
-            GoToPos.MovePos(this,cups[i],positions[i],duration);
+            moveCoroutines[i] = StartCoroutine(
+                GoToPos.MoveCoroutine(cups[i], positions[i], duration)
+            );
         }
     }
 }

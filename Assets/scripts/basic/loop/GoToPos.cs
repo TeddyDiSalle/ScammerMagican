@@ -8,7 +8,7 @@ public static class GoToPos
         runner.StartCoroutine(MoveCoroutine(target, endPos, duration));
     }
 
-    private static IEnumerator MoveCoroutine(Transform target, Vector3 endPos, float duration)
+    public static IEnumerator MoveCoroutine(Transform target, Vector3 endPos, float duration)
     {
         Vector3 startPos = target.position;
         float elapsed = 0f;
