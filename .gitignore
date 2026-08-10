@@ -1,10 +1,4 @@
 # This .gitignore file should be placed at the root of your Unity project directory
-#
-# Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
-#
-# Recommended: add any editor/OS/tool-specific ignore rules from the Global/ templates as needed.
-# See: https://github.com/github/gitignore/tree/main/Global
-# This .gitignore file should be placed at the root of your Unity project directory
 
 .utmp/
 
@@ -39,8 +33,10 @@
 # JetBrains Rider personal settings
 *.DotSettings.user
 
-# Visual Studio cache directory
+# Visual Studio cache
 .vs/
+
+# Visual Studio Code project settings
 .vscode/
 # Gradle cache directory
 .gradle/

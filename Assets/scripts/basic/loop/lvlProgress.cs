@@ -33,13 +33,45 @@ public class lvlProgress : MonoBehaviour
     }
 
     public void reset()
+{
+    if (!done)
+        return;
+
+    done = false;
+    lostText.text = "";
+
+    StartCoroutine(ResetRoutine());
+}
+
+    private IEnumerator ResetRoutine()
     {
-        done = false;
-        lostText.text = "";
+        // VERY IMPORTANT:
+        // The real ball must survive when the old cups are destroyed.
+        if (cupSetter != null && cupSetter.ball != null)
+        {
+            cupSetter.ball.SetParent(null, true);
+        }
+
+        // Destroy all old cups.
         foreach (GameObject cup in GameObject.FindGameObjectsWithTag("cup"))
+        {
             Destroy(cup);
+        }
+
+        // Clear old cup references.
+        if (cupSetter != null &&
+            cupSetter.cupLower != null)
+        {
+            cupSetter.cupLower.cups = new Transform[0];
+        }
+
+        // Give Unity one frame to actually destroy the old cups.
+        yield return null;
+
         resetter.callGame();
-        bossFight.checkReady(level);
+
+        if (bossFight != null)
+            bossFight.checkReady(level);
     }
 
     public void lost()
@@ -79,15 +111,26 @@ public class lvlProgress : MonoBehaviour
     }
 
     public void progressLevel(bool gainLevel = true)
+{
+    currentWinsInLevel = 0;
+
+    if (gainLevel)
+        level++;
+
+    // Protect against invalid negative levels.
+    if (level < 0)
     {
-        currentWinsInLevel = 0;
-        if (gainLevel)
-            level ++;
-        if (level >= cupsAtLevels.Length)
-        {
-            Debug.LogWarning("Reached end of levels");
-            return;
-        }
-        cupSetter.cupsAmt = cupsAtLevels[level];
+        Debug.LogWarning("Level went below 0.");
+        return;
     }
+
+    // Protect against going past the final level.
+    if (level >= cupsAtLevels.Length)
+    {
+        Debug.LogWarning("Reached end of levels.");
+        return;
+    }
+
+    cupSetter.cupsAmt = cupsAtLevels[level];
+}
 }

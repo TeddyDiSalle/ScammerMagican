@@ -26,7 +26,6 @@ public class setCups : MonoBehaviour
         float cupHeight = cupWidth / cupScaleAspectRatio;
 
         float ballYPos = -1.8f - cupHeight * 0.25f;
-
         ball.localScale = Vector2.one * cupWidth / 2f;
 
         int middle = Mathf.FloorToInt((float)cupsAmt / 2f);
@@ -34,7 +33,6 @@ public class setCups : MonoBehaviour
         for (int i = 0; i < cupsAmt; i++)
         {
             GameObject cup = Instantiate(cupPrefab);
-
             cups.Add(cup.transform);
 
             cup.transform.localScale =
@@ -49,10 +47,7 @@ public class setCups : MonoBehaviour
             cup.name = "cup" + i;
 
             if (i == middle)
-            {
-                ball.position =
-                    new Vector2(cup.transform.position.x, ballYPos);
-            }
+                ball.position = new Vector2(cup.transform.position.x, ballYPos);
         }
 
         cupLower.cups = cups.ToArray();

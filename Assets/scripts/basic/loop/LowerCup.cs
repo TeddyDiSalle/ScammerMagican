@@ -33,18 +33,29 @@ public class LowerCup : MonoBehaviour
     {
         GoToPos.MovePos(this,cup,cup.position+new Vector3(0f,lowerAmt*(raiseInstead?1f:-1f),0f),duration);
     }
-    public IEnumerator DoLower(bool raiseInstead = false, Transform ignore = null)
+    public IEnumerator DoLower(
+    bool raiseInstead = false,
+    Transform ignore = null)
     {
-        foreach (Transform cup in cups){
-            if (cup.childCount>0)
-                cup.GetChild(0).SetParent(null);
-            if (cup!=ignore)
-                lowerCup(cup,raiseInstead);
+        foreach (Transform cup in cups)
+        {
+            if (cup == null)
+                continue;
+
+            // Remove ALL children, not just child 0.
+            while (cup.childCount > 0)
+            {
+                cup.GetChild(0).SetParent(null, true);
+            }
+
+            if (cup != ignore)
+            {
+                lowerCup(cup, raiseInstead);
+            }
         }
 
         yield return new WaitForSeconds(duration);
     }
-
 
     
 }

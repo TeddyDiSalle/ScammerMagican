@@ -32,19 +32,35 @@ public class lose : MonoBehaviour
 
     public void lost()
     {
-        lossesInARow ++;
-        if (lossesInARow>=lossesToDemotion&&!demoted)
+        lossesInARow++;
+
+        if (lossesInARow >= lossesToDemotion && !demoted)
         {
             demoted = true;
-            progressManager.level --;
-            progressManager.progressLevel(false);
-            if (progressManager.level <= -1 || lossesInARow >= lossesToLose){
+
+            // If we're already at the bottom level,
+            // this loss means game over instead of level -1.
+            if (progressManager.level <= 0 ||
+                lossesInARow >= lossesToLose)
+            {
                 demoted = false;
                 gameOver();
                 return;
             }
+
+            progressManager.level--;
+            progressManager.progressLevel(false);
         }
-        chatManager.addLine(slightLossLines[Random.Range(0,slightLossLines.Length)]);
+
+        if (slightLossLines != null &&
+            slightLossLines.Length > 0)
+        {
+            chatManager.addLine(
+                slightLossLines[
+                    Random.Range(0, slightLossLines.Length)
+                ]
+            );
+        }
     }
 
     public void gameOver()

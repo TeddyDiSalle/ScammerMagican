@@ -1,55 +1,83 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ChooseCup : MonoBehaviour
 {
     public float revealDelay;
     public GameObject clickBlocker;
+
     private lvlProgress progress;
     private LowerCup cupRaiser;
     private fightManager bossFight;
-    // Start is called before the first frame update
+
     void Start()
     {
         cupRaiser = FindObjectOfType<LowerCup>();
         progress = FindObjectOfType<lvlProgress>();
-        clickBlocker = GameObject.Find("clickBlocker");
         bossFight = FindObjectOfType<fightManager>();
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Don't rely on GameObject.Find because clickBlocker
+        // may be inactive when this cup is created.
+        if (clickBlocker == null)
+        {
+            Shuffle shuffle = FindObjectOfType<Shuffle>();
+
+            if (shuffle != null)
+                clickBlocker = shuffle.clickBlocker;
+        }
+
+        if (clickBlocker == null)
+            Debug.LogError("ChooseCup could not find clickBlocker.", this);
     }
 
     void OnMouseDown()
     {
-        if (!clickBlocker.activeSelf){//proper slection time
-            if (!bossFight.haltCup(transform))//check if not boss fight
-                StartCoroutine(DoReveal());//if not boss fight do end of selection
+        // Prevent a NullReferenceException.
+        if (clickBlocker == null)
+            return;
+
+        // Only allow cup selection at the proper time.
+        if (!clickBlocker.activeSelf)
+        {
+            // If there is no boss manager, normal gameplay still works.
+            if (bossFight == null || !bossFight.haltCup(transform))
+            {
+                StartCoroutine(DoReveal());
+            }
         }
     }
 
     IEnumerator DoReveal()
     {
-        clickBlocker.SetActive(true);//make sure player cant click
-        bool won = false;
-        //Debug.Log("Sprite clicked!"+gameObject);
+        if (clickBlocker == null ||
+            cupRaiser == null ||
+            progress == null)
+        {
+            yield break;
+        }
 
-        if (transform.childCount>0&&//has a child
-        transform.GetChild(0).gameObject.name=="ball"){//its the ball!
+        clickBlocker.SetActive(true);
+
+        bool won = false;
+
+        if (transform.childCount > 0 &&
+            transform.GetChild(0).gameObject.name == "ball")
+        {
             transform.GetChild(0).SetParent(null);
             won = true;
-            
         }
-        cupRaiser.lowerCup(transform,true);
 
-        yield return new WaitForSeconds(cupRaiser.duration+revealDelay);
+        cupRaiser.lowerCup(transform, true);
+
+        yield return new WaitForSeconds(
+            cupRaiser.duration + revealDelay
+        );
+
         progress.initialDone();
 
-        yield return StartCoroutine(cupRaiser.DoLower(true,transform));
+        yield return StartCoroutine(
+            cupRaiser.DoLower(true, transform)
+        );
 
         if (won)
             progress.won();
